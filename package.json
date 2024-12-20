@@ -1,0 +1,16 @@
+{
+  "name": "messageroom",
+  "version": "1.0.0",
+  "description": "Message room for users to chat and know each other. Made with Express and Redis as main stack",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matias A.",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.7.2"
+    "express": "^4.21.2",
+    "@types/express": "^5.0.0",
+  }
+}
