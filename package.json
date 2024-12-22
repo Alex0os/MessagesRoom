@@ -9,8 +9,8 @@
   "author": "Matias A.",
   "license": "MIT",
   "dependencies": {
-    "typescript": "^5.7.2"
-    "express": "^4.21.2",
     "@types/express": "^5.0.0",
+    "express": "^4.21.2",
+    "typescript": "^5.7.2"
   }
 }
