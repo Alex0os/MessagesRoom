@@ -58,12 +58,35 @@ app.get("/", (req, res) => {
 
 
 app.get("/login", (req, res) => {
-	res.send("This is the login resource");
+	new Promise<string>((resolve, reject) => {
+		readFile("public/login.html", "utf8", (err, data) => { if (err) {
+				console.log(err);
+				reject("Couldn't serve the HTML");
+			}
+			else {
+				resolve(data)
+			}
+		})
+	}).
+		then(data => res.send(data)).
+		catch(err => res.send(err));
 })
 
 
 app.get("/signin", (req, res) => {
-	res.send("This is the signin resource");
+	new Promise<string>((resolve, reject) => {
+		readFile("public/signin.html", "utf8", (err, data) => { if (err) {
+				console.log(err);
+				reject("Couldn't serve the HTML");
+			}
+			else {
+				resolve(data)
+			}
+		})
+	}).
+		then(data => res.send(data)).
+		catch(err => res.send(err));
 })
+
 
 app.listen(8080);
