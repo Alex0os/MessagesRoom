@@ -7,7 +7,7 @@ const app = express();
 // TODO: Send form to make the user authenticate themselves and then be able to
 // access the website
 
-const VALIDURLS = "^(foo|bar|/)$";
+const VALIDURLS = "^(/signin|/login|/)$";
 
 
 function isValidUrl(req: Request, res: Response, next: NextFunction): void {
@@ -15,7 +15,7 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 	// "/chatroom/{chatroom_id}, because the matches will become complicated,
 	// unless I decide to first verify that the url starts first with
 	// "/chatroom" resource
-	if (!req.url.match(VALIDURLS)) {
+	if (req.method === "GET" && !req.url.match(VALIDURLS)) {
 		res.status(401).send("Resource doesn't exists");
 		return;
 	}
@@ -37,6 +37,7 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 }
 
 
+app.use(express.json());
 app.all(/^(?!\/signin$|\/login$|\/$).*/, isValidUrl, authorizeUser);
 
 
@@ -88,5 +89,21 @@ app.get("/signin", (req, res) => {
 		catch(err => res.send(err));
 })
 
+app.post("/submit-signup", (req, res) => {
+	if (req.method !== "POST") {
+		res.status(401).send("Invalid request");
+		return;
+	}
+
+	console.log(req.body);
+})
+app.post("/submit-login", (req, res) => {
+	if (req.method !== "POST") {
+		res.status(401).send("Invalid request");
+		return;
+	}
+
+	console.log(req.body);
+})
 
 app.listen(8080);
