@@ -1,6 +1,9 @@
 import express, { Request, Response, NextFunction } from "express"
 import { readFile } from "fs";
+import { resolve } from "path";
 const app = express();
+const route = express.Router()
+
 
 // Let's make a callback to authenticate with JWT
 
@@ -20,7 +23,7 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 		return;
 	}
 
-	next();
+	return next();
 }
 
 
@@ -33,61 +36,17 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 		console.log("It doesn't have a token");
 		res.redirect(302, "/login")
 	}
-	next();
+	return next();
 }
 
 
 app.use(express.json());
-app.all(/^(?!\/signin$|\/login$|\/$).*/, isValidUrl, authorizeUser);
 
 
-app.get("/", (req, res) => {
-	new Promise<string>((resolve, reject) => {
-		readFile("public/index.html", "utf8", (err, data) => {
-			if (err) {
-				console.log(err);
-				reject("Couldn't serve the HTML");
-			}
-			else {
-				resolve(data)
-			}
-		})
-	}).
-		then(data => res.send(data)).
-		catch(err => res.send(err));
-})
+app.use("/app", express.static(resolve(__dirname, "..") + "/public/app", ));
+app.use("/login", express.static(resolve(__dirname, "..") + "/public/login", {index: "login.html"}));
+app.use("/signin", express.static(resolve(__dirname, "..") + "/public/signin", {index: "signin.html"}));
 
-
-app.get("/login", (req, res) => {
-	new Promise<string>((resolve, reject) => {
-		readFile("public/login.html", "utf8", (err, data) => { if (err) {
-				console.log(err);
-				reject("Couldn't serve the HTML");
-			}
-			else {
-				resolve(data)
-			}
-		})
-	}).
-		then(data => res.send(data)).
-		catch(err => res.send(err));
-})
-
-
-app.get("/signin", (req, res) => {
-	new Promise<string>((resolve, reject) => {
-		readFile("public/signin.html", "utf8", (err, data) => { if (err) {
-				console.log(err);
-				reject("Couldn't serve the HTML");
-			}
-			else {
-				resolve(data)
-			}
-		})
-	}).
-		then(data => res.send(data)).
-		catch(err => res.send(err));
-})
 
 app.post("/submit-signup", (req, res) => {
 	if (req.method !== "POST") {
@@ -97,6 +56,7 @@ app.post("/submit-signup", (req, res) => {
 
 	console.log(req.body);
 })
+
 app.post("/submit-login", (req, res) => {
 	if (req.method !== "POST") {
 		res.status(401).send("Invalid request");
