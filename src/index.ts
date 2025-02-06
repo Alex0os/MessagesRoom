@@ -1,9 +1,11 @@
 import express, { Request, Response, NextFunction } from "express"
-import { readFile } from "fs";
 import { resolve } from "path";
-const app = express();
-const route = express.Router()
+import { readFileSync } from "fs";
+import * as https from "https";
 
+const app = express();
+
+const BUILD_DIR = "/home/Matixannder/Desktop/Projects/MessageRoom/build";
 
 // Let's make a callback to authenticate with JWT
 
@@ -42,8 +44,7 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 
 app.use(express.json());
 
-
-app.use("/app", express.static(resolve(__dirname, "..") + "/public/app", ));
+app.use("/", express.static(resolve(__dirname, "..") + "/public/app", ));
 app.use("/login", express.static(resolve(__dirname, "..") + "/public/login", {index: "login.html"}));
 app.use("/signin", express.static(resolve(__dirname, "..") + "/public/signin", {index: "signin.html"}));
 
@@ -57,6 +58,7 @@ app.post("/submit-signup", (req, res) => {
 	console.log(req.body);
 })
 
+
 app.post("/submit-login", (req, res) => {
 	if (req.method !== "POST") {
 		res.status(401).send("Invalid request");
@@ -66,4 +68,14 @@ app.post("/submit-login", (req, res) => {
 	console.log(req.body);
 })
 
-app.listen(8080);
+
+const httpsOptions: https.ServerOptions = {
+	key: readFileSync(BUILD_DIR + "/server.key"),
+	cert: readFileSync(BUILD_DIR + "/server.cert"),
+}
+
+
+https.createServer(httpsOptions, app)
+	.listen(8080, () => {
+		console.log("Server set in");
+	});
