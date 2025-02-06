@@ -4,7 +4,7 @@
   "description": "Message room for users to chat and know each other. Made with Express and Redis as main stack",
   "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node build/index.js"
   },
   "author": "Matias A.",
   "license": "MIT",

@@ -1,16 +1,14 @@
 import express, { Request, Response, NextFunction } from "express"
-import { resolve } from "path";
 import { readFileSync } from "fs";
 import * as https from "https";
 
 const app = express();
 
-const BUILD_DIR = "/home/Matixannder/Desktop/Projects/MessageRoom/build";
+const BUILD_DIR = process.cwd() + "/build/";
+const PUBLIC_DIR = process.cwd() + "/public/";
 
-// Let's make a callback to authenticate with JWT
+app.use(express.static(PUBLIC_DIR));
 
-// TODO: Send form to make the user authenticate themselves and then be able to
-// access the website
 
 const VALIDURLS = "^(/signin|/login|/)$";
 
@@ -21,6 +19,7 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 	// unless I decide to first verify that the url starts first with
 	// "/chatroom" resource
 	if (req.method === "GET" && !req.url.match(VALIDURLS)) {
+		console.log(req.url)
 		res.status(401).send("Resource doesn't exists");
 		return;
 	}
@@ -36,25 +35,30 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 	}
 	else {
 		console.log("It doesn't have a token");
-		res.redirect(302, "/login")
+		return res.redirect(302, "/login");
 	}
 	return next();
 }
 
 
-app.use(express.json());
 
-app.use("/", express.static(resolve(__dirname, "..") + "/public/app", ));
-app.use("/login", express.static(resolve(__dirname, "..") + "/public/login", {index: "login.html"}));
-app.use("/signin", express.static(resolve(__dirname, "..") + "/public/signin", {index: "signin.html"}));
+app.get("/", authorizeUser, (req, res) => {
+	res.sendFile(PUBLIC_DIR + "app/index.html");
+})
 
+app.get("/login", (req, res) => {
+	res.sendFile(PUBLIC_DIR + "login/login.html");
+})
+
+app.get("/signin", (req, res) => {
+	res.sendFile(PUBLIC_DIR + "signin/signin.html");
+})
 
 app.post("/submit-signup", (req, res) => {
 	if (req.method !== "POST") {
 		res.status(401).send("Invalid request");
 		return;
 	}
-
 	console.log(req.body);
 })
 
@@ -64,18 +68,18 @@ app.post("/submit-login", (req, res) => {
 		res.status(401).send("Invalid request");
 		return;
 	}
-
 	console.log(req.body);
 })
 
+app.use(isValidUrl);
 
 const httpsOptions: https.ServerOptions = {
-	key: readFileSync(BUILD_DIR + "/server.key"),
-	cert: readFileSync(BUILD_DIR + "/server.cert"),
+	key: readFileSync(BUILD_DIR + "server.key"),
+	cert: readFileSync(BUILD_DIR + "server.cert"),
 }
 
 
 https.createServer(httpsOptions, app)
 	.listen(8080, () => {
-		console.log("Server set in");
+		console.log("HTTPs server started");
 	});
