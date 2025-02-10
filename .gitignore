@@ -2,3 +2,13 @@ package-lock.json
 build/
 node_modules/*
 
+react-development/*
+!react-development/package.json
+!react-development/public/
+!react-development/src/
+!react-development/README.md
+!react-development/src/
+!react-development/tsconfig*
+!react-development/eslint.config.js
+!react-development/vite.config.ts
+!react-development/index.html

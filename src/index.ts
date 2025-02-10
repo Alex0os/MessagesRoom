@@ -6,8 +6,10 @@ const app = express();
 
 const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
+const REACT_DIR = process.cwd() + "/react-development/dist/";
 
 app.use(express.static(PUBLIC_DIR));
+app.use(express.static(REACT_DIR));
 
 
 const VALIDURLS = "^(/signin|/login|/)$";
@@ -42,8 +44,8 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 
 
 
-app.get("/", authorizeUser, (req, res) => {
-	res.sendFile(PUBLIC_DIR + "app/index.html");
+app.get("/", (req, res) => {
+	res.sendFile(REACT_DIR + "index.html");
 })
 
 app.get("/login", (req, res) => {
