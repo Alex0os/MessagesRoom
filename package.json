@@ -4,7 +4,8 @@
   "description": "Message room for users to chat and know each other. Made with Express and Redis as main stack",
   "main": "build/index.js",
   "scripts": {
-    "start": "node build/index.js"
+    "start": "node build/index.js",
+	"build-app": "cd react-development && npm run build"
   },
   "author": "Matias A.",
   "license": "MIT",
