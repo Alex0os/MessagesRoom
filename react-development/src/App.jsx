@@ -1,18 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useRef, useState } from 'react'
 import './App.css'
 
-function Board() {
+function MessageApp() {
+	const [messages, addMessage] = useState([])
+	const currentInputValue = useRef("");
+
+	function handleClick() {
+		const content = currentInputValue.current.innerText;
+		currentInputValue.current.innerText = "";
+		addMessage([...messages, content])
+	}
+
+	return (
+		<>
+	      <Board messages={messages}/>
+	      <TextInput reference={currentInputValue}/>
+	      <div className='button-wrapper'>
+	        <button onClick={handleClick} type="button">Submit</button>
+	      </div>
+		</>
+	)
+}
+
+function Board({messages}) {
 	return (
 		<div className='board'>
+			{
+				messages.map((item) => {
+					return <div className='message'>{item}</div>
+				})
+			}
 		</div>
 	)
 }
 
-function TextInput() {
+function TextInput( {reference} ) {
 	return (
-		<div className='text-input' contentEditable={true}>
+		<div ref={reference} className='text-input' contentEditable={true}>
 		</div>
 	)
 }
@@ -22,11 +46,7 @@ function App() {
 
   return (
     <>
-	  <Board />
-	  <TextInput />
-	  <div className='button-wrapper'>
-	    <button type="button">Submit</button>
-	  </div>
+	  <MessageApp />
     </>
   )
 }
