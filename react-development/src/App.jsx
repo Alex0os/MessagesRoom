@@ -6,6 +6,7 @@ function MessageApp() {
 	const currentInputValue = useRef("");
 
 	function handleClick() {
+
 		const content = currentInputValue.current.innerText;
 		currentInputValue.current.innerText = "";
 		addMessage([...messages, content])
@@ -26,8 +27,8 @@ function Board({messages}) {
 	return (
 		<div className='board'>
 			{
-				messages.map((item) => {
-					return <div className='message'>{item}</div>
+				messages.map((item, key) => {
+					return <div key={key} className='message'>{item}</div>
 				})
 			}
 		</div>
