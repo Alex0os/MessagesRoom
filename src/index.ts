@@ -6,7 +6,7 @@ const app = express();
 
 const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
-const REACT_DIR = process.cwd() + "/react-development/dist/";
+const REACT_DIR = PUBLIC_DIR + "/app/";
 
 app.use(express.static(PUBLIC_DIR));
 app.use(express.static(REACT_DIR));

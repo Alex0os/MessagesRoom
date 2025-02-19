@@ -1,21 +1,32 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
+
+const WS = new WebSocket("ws://127.0.0.1:8000/")
 
 function MessageApp() {
 	const [messages, addMessage] = useState([])
-	const currentInputValue = useRef("");
+	const inputFieldRef = useRef("");
+
+	useEffect(() => {
+		WS.addEventListener("message", (event) => {
+			addMessage([...messages, event.data]);
+		});
+	}, [messages]);
 
 	function handleClick() {
+		const content = inputFieldRef.current.innerText;
+		inputFieldRef.current.innerText = "";
 
-		const content = currentInputValue.current.innerText;
-		currentInputValue.current.innerText = "";
 		addMessage([...messages, content])
+		WS.send(content);
+
+		inputFieldRef.current.focus();
 	}
 
 	return (
 		<>
 	      <Board messages={messages}/>
-	      <TextInput reference={currentInputValue}/>
+	      <TextInput reference={inputFieldRef}/>
 	      <div className='button-wrapper'>
 	        <button onClick={handleClick} type="button">Submit</button>
 	      </div>
