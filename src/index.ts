@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express"
 import { readFileSync } from "fs";
 import * as https from "https";
+import { WebSocketServer } from "ws";
 
 const app = express();
 
@@ -81,7 +82,29 @@ const httpsOptions: https.ServerOptions = {
 }
 
 
-https.createServer(httpsOptions, app)
-	.listen(8080, () => {
-		console.log("HTTPs server started");
-	});
+const server = https.createServer(httpsOptions, app);
+
+const wss = new WebSocketServer({ server, path: "/ws"});
+
+wss.on("connection", function(ws, req) {
+	const clientAddress = req.socket.remoteAddress;
+	console.log("New client -> " + clientAddress);
+
+	ws.on("error", () => console.log("There was an error"));
+
+	ws.send("Hello from websocket");
+
+	ws.on("message", function(msg) {
+		console.log(new String(msg));
+		// I noticed that is not necesary to parse the RawData type when
+		// sending it with a string in the "send" method
+		wss.clients.forEach((client) => client
+							.send(`Message from ${clientAddress} -> ${msg}`));
+
+	})
+
+});
+
+server.listen(8080, () => {
+	console.log("HTTPs server started");
+});
