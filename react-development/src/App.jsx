@@ -1,33 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
+
+const WS = new WebSocket("ws://127.0.0.1:8000/")
+
+function MessageApp() {
+	const [messages, addMessage] = useState([])
+	const inputFieldRef = useRef("");
+
+	useEffect(() => {
+		WS.addEventListener("message", (event) => {
+			addMessage([...messages, event.data]);
+		});
+	}, [messages]);
+
+	function handleClick() {
+		const content = inputFieldRef.current.innerText;
+		inputFieldRef.current.innerText = "";
+
+		addMessage([...messages, content])
+		WS.send(content);
+
+		inputFieldRef.current.focus();
+	}
+
+	return (
+		<>
+	      <Board messages={messages}/>
+	      <TextInput reference={inputFieldRef}/>
+	      <div className='button-wrapper'>
+	        <button onClick={handleClick} type="button">Submit</button>
+	      </div>
+		</>
+	)
+}
+
+function Board({messages}) {
+	return (
+		<div className='board'>
+			{
+				messages.map((item, key) => {
+					return <div key={key} className='message'>{item}</div>
+				})
+			}
+		</div>
+	)
+}
+
+function TextInput( {reference} ) {
+	return (
+		<div ref={reference} className='text-input' contentEditable={true}>
+		</div>
+	)
+}
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+	  <MessageApp />
     </>
   )
 }

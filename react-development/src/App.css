@@ -1,42 +1,41 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+	width: auto;
+	height: auto;
+	margin-inline: auto;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.board  {
+	width: 800px;
+	height: 600px;
+
+	border: solid 2px white;
+	margin-left: auto;
+	margin-right : auto;
+	margin-bottom: 20px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.text-input {
+	width: 800px;
+	border: solid 2px white;
+	max-height: fit-content;
+	padding: 10px;
+	/* Because the box model, the padding will add to the width 
+	 * putting padding in vertical axis only will make the width 
+	 * unaffected but it won't solve the absence of padding at the 
+	 * horizontal axis, unless I put border-box*/ 
+	box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.button-wrapper {
+	display: flex;
+	justify-content: center;
+	padding:5px;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.board > .message {
+	border: solid 2px white;
+	padding-left: 5px;
+	padding-right: 5px;
+	white-space: pre-wrap; /* Preserve line breaks and spaces */
+	word-wrap: break-word; /* Ensure long words don't overflow */
 }
