@@ -92,7 +92,7 @@ wss.on("connection", function(ws, req) {
 
 	ws.on("error", () => console.log("There was an error"));
 
-	ws.send("Hello from websocket");
+	ws.send("Hello from webserver");
 
 	ws.on("message", function(msg) {
 		console.log(new String(msg));

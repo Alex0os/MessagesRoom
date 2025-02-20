@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
-const WS = new WebSocket("ws://127.0.0.1:8000/")
+const WS = new WebSocket("wss://localhost:8080/ws");
 
 function MessageApp() {
 	const [messages, addMessage] = useState([])
