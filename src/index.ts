@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express"
 import { readFileSync } from "fs";
 import * as https from "https";
 import { WebSocketServer } from "ws";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -9,6 +10,7 @@ const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
 const REACT_DIR = PUBLIC_DIR + "/app/";
 
+app.use(cookieParser())
 app.use(express.static(PUBLIC_DIR));
 app.use(express.static(REACT_DIR));
 
@@ -31,18 +33,13 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 }
 
 
+
 function authorizeUser(req: Request, res: Response, next: NextFunction): void {
-	if (req.header("Authorization")) {
-		console.log("It has a token");
-		console.log(req.header("Authorization"));
-	}
-	else {
-		console.log("It doesn't have a token");
-		return res.redirect(302, "/login");
-	}
+	console.log("Using the authorizeUser middleware")
 	return next();
 }
 
+app.use(authorizeUser);
 
 
 app.get("/", (req, res) => {
