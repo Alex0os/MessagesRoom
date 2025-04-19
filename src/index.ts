@@ -32,44 +32,37 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 	return next();
 }
 
-
-
 function authorizeUser(req: Request, res: Response, next: NextFunction): void {
-	console.log("Using the authorizeUser middleware")
+	console.log(req.cookies)
+	if (req.cookies)
+		console.log("Using the authorizeUser middleware")
+	else
+		console.log("No cookie from the client")
+
 	return next();
 }
 
-app.use(authorizeUser);
 
-
-app.get("/", (req, res) => {
+app.get("/", authorizeUser, (req, res) => {
 	res.sendFile(REACT_DIR + "index.html");
 })
 
-app.get("/login", (req, res) => {
+app.route("/login")
+.get(authorizeUser, (req, res) => {
 	res.sendFile(PUBLIC_DIR + "login/login.html");
 })
+.post((req, res) => {
+	console.log("Post request for login sent");
+})
 
-app.get("/signin", (req, res) => {
+app.route("/signin")
+.get(authorizeUser, (req, res) => {
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
-
-app.post("/submit-signup", (req, res) => {
-	if (req.method !== "POST") {
-		res.status(401).send("Invalid request");
-		return;
-	}
-	console.log(req.body);
+.post((req, res) => {
+	console.log("Post request for signing sent");
 })
 
-
-app.post("/submit-login", (req, res) => {
-	if (req.method !== "POST") {
-		res.status(401).send("Invalid request");
-		return;
-	}
-	console.log(req.body);
-})
 
 app.use(isValidUrl);
 
@@ -77,7 +70,6 @@ const httpsOptions: https.ServerOptions = {
 	key: readFileSync(BUILD_DIR + "server.key"),
 	cert: readFileSync(BUILD_DIR + "server.cert"),
 }
-
 
 const server = https.createServer(httpsOptions, app);
 
