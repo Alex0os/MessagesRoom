@@ -10,13 +10,10 @@ const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
 const REACT_DIR = PUBLIC_DIR + "/app/";
 
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
-app.use(express.static(REACT_DIR));
-
 
 const VALIDURLS = "^(/signin|/login|/)$";
-
 
 function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 	// This isn't gonna be good for when I create chatrooms with the resource
@@ -33,13 +30,10 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 }
 
 function authorizeUser(req: Request, res: Response, next: NextFunction): void {
-	console.log(req.cookies)
-	if (req.cookies)
-		console.log("Using the authorizeUser middleware")
+	if (Object.keys(req.cookies).length > 0) // Object not empty
+		return next();
 	else
-		console.log("No cookie from the client")
-
-	return next();
+		return res.redirect("/login");
 }
 
 
@@ -47,8 +41,10 @@ app.get("/", authorizeUser, (req, res) => {
 	res.sendFile(REACT_DIR + "index.html");
 })
 
+app.use(express.static(REACT_DIR));
+
 app.route("/login")
-.get(authorizeUser, (req, res) => {
+.get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "login/login.html");
 })
 .post((req, res) => {
@@ -56,7 +52,7 @@ app.route("/login")
 })
 
 app.route("/signin")
-.get(authorizeUser, (req, res) => {
+.get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
 .post((req, res) => {
@@ -72,7 +68,6 @@ const httpsOptions: https.ServerOptions = {
 }
 
 const server = https.createServer(httpsOptions, app);
-
 const wss = new WebSocketServer({ server, path: "/ws"});
 
 wss.on("connection", function(ws, req) {
