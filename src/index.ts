@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import * as https from "https";
 import { WebSocketServer } from "ws";
 import cookieParser from "cookie-parser";
+import { initDataBase } from "./db_handler";
 
 const app = express();
 
@@ -91,4 +92,5 @@ wss.on("connection", function(ws, req) {
 
 server.listen(8080, () => {
 	console.log("HTTPs server started");
+	initDataBase().then(() => console.log("initDatabase executed"));
 });
