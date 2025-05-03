@@ -11,6 +11,7 @@ const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
 const REACT_DIR = PUBLIC_DIR + "/app/";
 
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
 
@@ -49,7 +50,7 @@ app.route("/login")
 	res.sendFile(PUBLIC_DIR + "login/login.html");
 })
 .post((req, res) => {
-	console.log("Post request for login sent");
+	console.log(req.body);
 })
 
 app.route("/signin")
@@ -57,7 +58,8 @@ app.route("/signin")
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
 .post((req, res) => {
-	console.log("Post request for signing sent");
+	console.log(req.body);
+	res.status(200).send("OK\n");
 })
 
 
@@ -94,3 +96,5 @@ server.listen(8080, () => {
 	console.log("HTTPs server started");
 	initDataBase().then(() => console.log("initDatabase executed"));
 });
+
+export default app;

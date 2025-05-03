@@ -14,3 +14,5 @@ react-development/*
 !react-development/eslint.config.js
 !react-development/vite.config.ts
 !react-development/index.html
+
+scripts/
