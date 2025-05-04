@@ -15,10 +15,14 @@
     "@types/node": "^22.13.1",
     "@types/pg-promise": "^0.0.28",
     "@types/ws": "^8.5.14",
+    "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
     "pg-promise": "^11.13.0",
     "typescript": "^5.7.2",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2"
   }
 }

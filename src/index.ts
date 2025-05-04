@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import * as https from "https";
 import { WebSocketServer } from "ws";
 import cookieParser from "cookie-parser";
-import { initDataBase } from "./db_handler";
+import { initDataBase, introduceCredentials } from "./db_handler";
 
 const app = express();
 
@@ -57,9 +57,15 @@ app.route("/signin")
 .get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
+// TODO: once the scripts are no longer useful for testing
+// make this URL and method accessible from agents only
 .post((req, res) => {
-	console.log(req.body);
-	res.status(200).send("OK\n");
+	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
+	.then(() => res.status(200).send("OK\n"))
+	.catch(error => {
+		console.log("Error in this part of the thing");
+		res.status(505).send("Something went wrong from the server, try again later")
+	});
 })
 
 
