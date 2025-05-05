@@ -1,7 +1,6 @@
 import pgPromise from "pg-promise"
 const pgp = pgPromise();
 import { genSalt, hash} from "bcrypt";
-import { exit } from "process";
 
 const db = pgp({
 	host: "localhost",
@@ -59,17 +58,17 @@ export async function introduceCredentials(userName: string, email: string, pass
 		let salt = await genSalt(10)
 		let hashedPass = await hash(password, salt)
 
-		// TODO: Make an implementation that allows you to not be able to
-		// create a new account if a user with that username already exists
-		let userID = await db.one(`INSERT INTO users (user_name) VALUES ($1) RETURNING id`, userName);
+		let check_user = await db.any("SELECT 1 FROM users WHERE user_name = $1", [userName]) 
+
+		if (check_user.length > 0) {
+			throw new Error("CREDENTIAL_CONFLICT");
+		}
+
+		let userID = await db.one(`INSERT INTO users (user_name) VALUES ($1) RETURNING id`, [userName]);
 
 		await db.none(`INSERT INTO credentials (email, password, salt, user_id)
 					  VALUES ($1, $2, $3, $4)`, [email, hashedPass, salt, userID.id])
 	} catch (error) {
-		throw new Error("Something whent wrong:");
+		throw new Error("INTERNAL_SERVER_ERROR");
 	}
 }
-// 1. Create the user's table
-// 2. Verify this code works as intended
-// 3. Create an implementation for storing user's credentials
-// 4. Secure the credentials of the user inside the database

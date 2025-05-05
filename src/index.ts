@@ -23,7 +23,6 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 	// unless I decide to first verify that the url starts first with
 	// "/chatroom" resource
 	if (req.method === "GET" && !req.url.match(VALIDURLS)) {
-		console.log(req.url)
 		res.status(401).send("Resource doesn't exists");
 		return;
 	}
@@ -57,14 +56,14 @@ app.route("/signin")
 .get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
-// TODO: once the scripts are no longer useful for testing
-// make this URL and method accessible from agents only
 .post((req, res) => {
 	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
 	.then(() => res.status(200).send("OK\n"))
 	.catch(error => {
-		console.log("Error in this part of the thing");
-		res.status(505).send("Something went wrong from the server, try again later")
+		if (error.code = "CREDENTIAL_CONFLICT")
+			res.status(409).send("Sorry, the username you introduced is already in use\n");
+		else
+			res.status(505).send("Server Error, try again later\n");
 	});
 })
 
