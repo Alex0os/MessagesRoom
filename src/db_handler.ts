@@ -1,6 +1,6 @@
 import pgPromise from "pg-promise"
 const pgp = pgPromise();
-import { genSalt, hash} from "bcrypt";
+import { genSalt, hash } from "bcrypt";
 
 const db = pgp({
 	host: "localhost",
@@ -70,5 +70,19 @@ export async function introduceCredentials(userName: string, email: string, pass
 					  VALUES ($1, $2, $3, $4)`, [email, hashedPass, salt, userID.id])
 	} catch (error) {
 		throw new Error("INTERNAL_SERVER_ERROR");
+	}
+}
+
+export async function loginUser(introducedEmail: string, introducedPassword: string) {
+	let data = await db.oneOrNone("SELECT salt, password FROM credentials WHERE email = $1", [introducedEmail]);
+
+	if (!data) {
+		throw new Error("EMAIL_NOT_FOUND");
+	}
+
+	let hashedPass = await hash(introducedPassword, data.salt);
+
+	if (hashedPass !== data.password) {
+		throw new Error("INCORRECT_PASSWORD")
 	}
 }

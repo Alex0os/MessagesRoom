@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import * as https from "https";
 import { WebSocketServer } from "ws";
 import cookieParser from "cookie-parser";
-import { initDataBase, introduceCredentials } from "./db_handler";
+import { initDataBase, introduceCredentials, loginUser } from "./db_handler";
 
 const app = express();
 
@@ -49,7 +49,14 @@ app.route("/login")
 	res.sendFile(PUBLIC_DIR + "login/login.html");
 })
 .post((req, res) => {
-	console.log(req.body);
+	loginUser(req.body.email, req.body.password)
+	.then(() => res.status(200).send("OK\n"))
+	.catch((error) => {
+		if (error.message === "EMAIL_NOT_FOUND")
+			res.status(401).send("There's no account with this email yet\n");
+		else
+			res.status(401).send("Introduced password does not match with the email\n");
+	});
 })
 
 app.route("/signin")
@@ -60,7 +67,7 @@ app.route("/signin")
 	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
 	.then(() => res.status(200).send("OK\n"))
 	.catch(error => {
-		if (error.code = "CREDENTIAL_CONFLICT")
+		if (error.message === "CREDENTIAL_CONFLICT")
 			res.status(409).send("Sorry, the username you introduced is already in use\n");
 		else
 			res.status(505).send("Server Error, try again later\n");
