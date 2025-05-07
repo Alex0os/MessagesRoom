@@ -5,8 +5,10 @@ import { WebSocketServer } from "ws";
 import cookieParser from "cookie-parser";
 import { initDataBase, introduceCredentials, loginUser } from "./db_handler";
 import { randomBytes } from "crypto";
+import { createClient } from "redis";
 
 const app = express();
+const redisClient = createClient();
 
 const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
@@ -32,8 +34,20 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 }
 
 function authorizeUser(req: Request, res: Response, next: NextFunction): void {
-	if (Object.keys(req.cookies).length > 0) // Object not empty
-		return next();
+	if (Object.keys(req.cookies).length > 0) { // Object not empty
+		redisClient.get(req.cookies.id)
+		.then((sessionExists) => {
+			if (!sessionExists) {
+				res.status(401).redirect("/login");
+			} else {
+				return next();
+			}
+		})
+		.catch(err => {
+			console.log(err);
+			res.status(505).send("Internal server error");
+		})
+	}
 	else
 		return res.redirect("/login");
 }
@@ -51,9 +65,19 @@ app.route("/login")
 })
 .post((req, res) => {
 	loginUser(req.body.email, req.body.password)
-	.then(() => res.status(200)
-		  .cookie("id", `${randomBytes(32).toString("hex")}`, {httpOnly: true, secure: true})
-		  .send("OK\n"))
+	.then(() => {
+		let sessionId = randomBytes(32).toString("hex");
+		redisClient.set(sessionId, 1)
+		.then(() => {
+			res.status(200)
+			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+			.redirect("/")
+		})
+		.catch((err) => {
+			res.status(505).send("Internal server error");
+			console.log(err);
+		})
+	})
 	.catch((error) => {
 		if (error.message === "EMAIL_NOT_FOUND")
 			res.status(401).send("There's no account with this email yet\n");
@@ -68,13 +92,16 @@ app.route("/signin")
 })
 .post((req, res) => {
 	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
-	.then(() => res
-		  .status(200)
-		  .cookie("id", `${randomBytes(32).toString("hex")}`, {httpOnly: true, secure: true})
-		  .send("OK\n"))
-		  // I guess what I can do now is to pass the session id to a function
-		  // that manage a Redis database instance so I can define a row
-		  // where the session ID will live to be compared
+	.then(() => {
+		let sessionId = randomBytes(32).toString("hex");
+		redisClient.set(sessionId, 1).then(() => {
+			res
+			.status(200)
+			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+			.redirect("/")
+		})
+		.catch(err => res.status(505).send("Server Error, please try again later"));
+	})
 	.catch(error => {
 		if (error.message === "CREDENTIAL_CONFLICT")
 			res.status(409).send("Sorry, the username you introduced is already in use\n");
@@ -113,9 +140,13 @@ wss.on("connection", function(ws, req) {
 
 });
 
+
+
 server.listen(8080, () => {
 	console.log("HTTPs server started");
 	initDataBase().then(() => console.log("initDatabase executed"));
+	redisClient.on("error", err => console.log("Redis client error", err))
+	redisClient.connect();
 });
 
 export default app;

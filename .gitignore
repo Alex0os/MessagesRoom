@@ -16,3 +16,4 @@ react-development/*
 !react-development/index.html
 
 scripts/
+dump.rdb
