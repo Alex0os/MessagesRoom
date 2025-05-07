@@ -4,6 +4,7 @@ import * as https from "https";
 import { WebSocketServer } from "ws";
 import cookieParser from "cookie-parser";
 import { initDataBase, introduceCredentials, loginUser } from "./db_handler";
+import { randomBytes } from "crypto";
 
 const app = express();
 
@@ -50,7 +51,9 @@ app.route("/login")
 })
 .post((req, res) => {
 	loginUser(req.body.email, req.body.password)
-	.then(() => res.status(200).send("OK\n"))
+	.then(() => res.status(200)
+		  .cookie("id", `${randomBytes(32).toString("hex")}`, {httpOnly: true, secure: true})
+		  .send("OK\n"))
 	.catch((error) => {
 		if (error.message === "EMAIL_NOT_FOUND")
 			res.status(401).send("There's no account with this email yet\n");
@@ -65,7 +68,13 @@ app.route("/signin")
 })
 .post((req, res) => {
 	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
-	.then(() => res.status(200).send("OK\n"))
+	.then(() => res
+		  .status(200)
+		  .cookie("id", `${randomBytes(32).toString("hex")}`, {httpOnly: true, secure: true})
+		  .send("OK\n"))
+		  // I guess what I can do now is to pass the session id to a function
+		  // that manage a Redis database instance so I can define a row
+		  // where the session ID will live to be compared
 	.catch(error => {
 		if (error.message === "CREDENTIAL_CONFLICT")
 			res.status(409).send("Sorry, the username you introduced is already in use\n");

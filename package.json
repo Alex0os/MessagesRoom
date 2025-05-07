@@ -10,11 +10,6 @@
   "author": "Matias A.",
   "license": "MIT",
   "dependencies": {
-    "@types/cookie-parser": "^1.4.8",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.13.1",
-    "@types/pg-promise": "^0.0.28",
-    "@types/ws": "^8.5.14",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
@@ -23,6 +18,11 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2"
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.14",
+    "@types/pg-promise": "^0.0.28",
+    "@types/ws": "^8.18.1"
   }
 }
