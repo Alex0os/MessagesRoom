@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 const WS = new WebSocket("wss://localhost:8080/ws");
+const USER_NAME = function() { return document.cookie.split("=")[1] }();
 
 function MessageApp() {
 	const [messages, addMessage] = useState([])
@@ -9,7 +10,9 @@ function MessageApp() {
 
 	useEffect(() => {
 		WS.addEventListener("message", (event) => {
-			addMessage([...messages, event.data]);
+			let messageData = JSON.parse(event.data);
+			if (messageData.user !== USER_NAME)
+				addMessage([...messages, messageData]);
 		});
 	}, [messages]);
 
@@ -17,8 +20,14 @@ function MessageApp() {
 		const content = inputFieldRef.current.innerText;
 		inputFieldRef.current.innerText = "";
 
-		addMessage([...messages, content])
-		WS.send(content);
+
+		let userInfo = {
+			user: USER_NAME,
+			content: content
+		}
+
+		addMessage([...messages, userInfo]);
+		WS.send(JSON.stringify(userInfo));
 
 		inputFieldRef.current.focus();
 	}
@@ -39,7 +48,13 @@ function Board({messages}) {
 		<div className='board'>
 			{
 				messages.map((item, key) => {
-					return <div key={key} className='message'>{item}</div>
+					return (
+						<div key={key} className='message'>
+							{item.user}
+							<div>
+								{item.content}
+							</div>
+						</div>)
 				})
 			}
 		</div>

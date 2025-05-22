@@ -127,20 +127,14 @@ const wss = new WebSocketServer({ server, path: "/ws"});
 
 // TODO: Remember to add authorization parsing to the handshake
 wss.on("connection", function(ws, req) {
-	const clientCookie = req.headers.cookie;
-	console.log("New cookie -> " + clientCookie);
 
 	ws.on("error", () => console.log("There was an error"));
-
-	ws.send("Hello from webserver");
 
 	ws.on("message", function(msg) {
 		console.log(new String(msg));
 		// I noticed that is not necesary to parse the RawData type when
 		// sending it with a string in the "send" method
-		wss.clients.forEach((client) => client
-							.send(`Message from ${clientCookie} -> ${msg}`));
-
+		wss.clients.forEach((client) => client.send(`${msg}`));
 	})
 
 });
