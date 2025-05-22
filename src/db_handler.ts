@@ -71,6 +71,9 @@ export async function introduceCredentials(userName: string, email: string, pass
 
 		return userName;
 	} catch (error) {
+		if (error instanceof Error && error.message == "CREDENTIAL_CONFLICT") 
+			throw error;
+
 		throw new Error("INTERNAL_SERVER_ERROR");
 	}
 }

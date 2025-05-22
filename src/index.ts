@@ -35,6 +35,9 @@ function isValidUrl(req: Request, res: Response, next: NextFunction): void {
 
 function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 	if (Object.keys(req.cookies).length > 0) { // Object not empty
+		// TODO: Make it so the session ids last a certain amount of time,
+		// and then make it so with every request to the website, the session
+		// id is refreshed
 		redisClient.get(req.cookies.id)
 		.then((sessionExists) => {
 			if (!sessionExists) {
@@ -63,55 +66,55 @@ app.route("/login")
 .get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "login/login.html");
 })
-.post((req, res) => {
-	loginUser(req.body.email, req.body.password)
-	.then((userName) => {
+.post(async function(req, res) {
+	try {
+		let userName = await loginUser(req.body.email, req.body.password);
 		let sessionId = randomBytes(32).toString("hex");
-		redisClient.set(sessionId, 1)
-		.then(() => {
-			res.status(200)
-			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
-			.cookie("username", `${userName}`, {secure: true}) 
-			.redirect("/")
-			// I don't know if this is a good way to do it, but its the only way
-			// I can think of
-		})
-		.catch((err) => {
-			res.status(505).send("Internal server error");
-			console.log(err);
-		})
-	})
-	.catch((error) => {
-		if (error.message === "EMAIL_NOT_FOUND")
-			res.status(401).send("There's no account with this email yet\n");
-		else
-			res.status(401).send("Introduced password does not match with the email\n");
-	});
+
+		await redisClient.set(sessionId, 1);
+
+		res.status(200)
+		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+		.cookie("username", `${userName}`, {secure: true}) 
+		.redirect("/")
+		// I don't know if this is a good way to do it, but its the only way
+		// I can think of
+	} catch (error) {
+		if (error instanceof Error) {
+			if (error.message === "EMAIL_NOT_FOUND")
+				res.status(401).send("There's no account with this email yet\n");
+			else if (error.message === "INCORRECT_PASSWORD")
+				res.status(401).send("Introduced password does not match with the email\n");
+			else
+				res.status(505).send("Internal server error");
+		}
+	}
 })
 
 app.route("/signin")
 .get((req, res) => {
 	res.sendFile(PUBLIC_DIR + "signin/signin.html");
 })
-.post((req, res) => {
-	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
-	.then((userName) => {
+.post(async function(req, res) {
+	try {
+		let userName = await introduceCredentials(req.body.fullname, req.body.email, req.body.password);
 		let sessionId = randomBytes(32).toString("hex");
-		redisClient.set(sessionId, 1).then(() => {
-			res
-			.status(200)
-			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
-			.cookie("username", `${userName}`, {secure: true}) 
-			.redirect("/")
-		})
-		.catch(err => res.status(505).send("Server Error, please try again later"));
-	})
-	.catch(error => {
-		if (error.message === "CREDENTIAL_CONFLICT")
-			res.status(409).send("Sorry, the username you introduced is already in use\n");
-		else
-			res.status(505).send("Server Error, try again later\n");
-	});
+
+		await redisClient.set(sessionId, 1);
+		res
+		.status(200)
+		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+		.cookie("username", `${userName}`, {secure: true}) 
+		.redirect("/")
+		
+	} catch (error) {
+		if (error instanceof Error) {
+			if (error.message === "CREDENTIAL_CONFLICT")
+				res.status(409).send("Sorry, the username you introduced is already in use\n");
+			else
+				res.status(505).send("Server Error, try again later\n");
+		}
+	}
 })
 
 
@@ -123,7 +126,7 @@ const httpsOptions: https.ServerOptions = {
 }
 
 const server = https.createServer(httpsOptions, app);
-server.on("upgrade", (req, socket, head) => {
+server.on("upgrade", async function(req, socket, head) {
 	const unauthorizedResponse = 
 		`HTTP/1.1 401 Unauthorized\r
 	WWW-Authenticate: Basic realm="Access to the site"\r
@@ -145,21 +148,18 @@ server.on("upgrade", (req, socket, head) => {
 		socket.destroy();
 		return;
 	} else {
-		redisClient.get(sessionID[0])
-		.then(sessionExists => {
-			if (!sessionExists) {
-				socket.write(unauthorizedResponse);
-				socket.destroy();
-				return;
-			} else 
-				return;
-		})
+		let sessionExists = await redisClient.get(sessionID[0]);
+		if (!sessionExists) {
+			socket.write(unauthorizedResponse);
+			socket.destroy();
+			return;
+		} else 
+			return;
 	}
 });
 
 const wss = new WebSocketServer({ server, path: "/ws"});
 
-// TODO: Remember to add authorization parsing to the handshake
 wss.on("connection", function(ws, req) {
 	ws.on("error", () => console.log("There was an error"));
 
