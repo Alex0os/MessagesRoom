@@ -53,7 +53,7 @@ export async function initDataBase() {
 	}
 };
 
-export async function introduceCredentials(userName: string, email: string, password: string) {
+export async function introduceCredentials(userName: string, email: string, password: string): Promise<string> {
 	try {
 		let salt = await genSalt(10)
 		let hashedPass = await hash(password, salt)
@@ -67,14 +67,16 @@ export async function introduceCredentials(userName: string, email: string, pass
 		let userID = await db.one(`INSERT INTO users (user_name) VALUES ($1) RETURNING id`, [userName]);
 
 		await db.none(`INSERT INTO credentials (email, password, salt, user_id)
-					  VALUES ($1, $2, $3, $4)`, [email, hashedPass, salt, userID.id])
+					  VALUES ($1, $2, $3, $4)`, [email, hashedPass, salt, userID.id]);
+
+		return userName;
 	} catch (error) {
 		throw new Error("INTERNAL_SERVER_ERROR");
 	}
 }
 
-export async function loginUser(introducedEmail: string, introducedPassword: string) {
-	let data = await db.oneOrNone("SELECT salt, password FROM credentials WHERE email = $1", [introducedEmail]);
+export async function loginUser(introducedEmail: string, introducedPassword: string): Promise<string>{
+	let data = await db.oneOrNone("SELECT salt, password, user_id FROM credentials WHERE email = $1", [introducedEmail]);
 
 	if (!data) {
 		throw new Error("EMAIL_NOT_FOUND");
@@ -85,4 +87,7 @@ export async function loginUser(introducedEmail: string, introducedPassword: str
 	if (hashedPass !== data.password) {
 		throw new Error("INCORRECT_PASSWORD")
 	}
+
+	let userName = await db.one("SELECT user_name FROM users WHERE id = $1", [data.user_id]);
+	return userName.user_name;
 }

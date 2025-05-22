@@ -49,7 +49,7 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 		})
 	}
 	else
-		return res.redirect("/login");
+		return res.status(401).redirect("/login");
 }
 
 
@@ -65,13 +65,16 @@ app.route("/login")
 })
 .post((req, res) => {
 	loginUser(req.body.email, req.body.password)
-	.then(() => {
+	.then((userName) => {
 		let sessionId = randomBytes(32).toString("hex");
 		redisClient.set(sessionId, 1)
 		.then(() => {
 			res.status(200)
 			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+			.cookie("username", `${userName}`, {secure: true}) 
 			.redirect("/")
+			// I don't know if this is a good way to do it, but its the only way
+			// I can think of
 		})
 		.catch((err) => {
 			res.status(505).send("Internal server error");
@@ -92,12 +95,13 @@ app.route("/signin")
 })
 .post((req, res) => {
 	introduceCredentials(req.body.fullname, req.body.email, req.body.password)
-	.then(() => {
+	.then((userName) => {
 		let sessionId = randomBytes(32).toString("hex");
 		redisClient.set(sessionId, 1).then(() => {
 			res
 			.status(200)
 			.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+			.cookie("username", `${userName}`, {secure: true}) 
 			.redirect("/")
 		})
 		.catch(err => res.status(505).send("Server Error, please try again later"));
@@ -121,9 +125,10 @@ const httpsOptions: https.ServerOptions = {
 const server = https.createServer(httpsOptions, app);
 const wss = new WebSocketServer({ server, path: "/ws"});
 
+// TODO: Remember to add authorization parsing to the handshake
 wss.on("connection", function(ws, req) {
-	const clientAddress = req.socket.remoteAddress;
-	console.log("New client -> " + clientAddress);
+	const clientCookie = req.headers.cookie;
+	console.log("New cookie -> " + clientCookie);
 
 	ws.on("error", () => console.log("There was an error"));
 
@@ -134,7 +139,7 @@ wss.on("connection", function(ws, req) {
 		// I noticed that is not necesary to parse the RawData type when
 		// sending it with a string in the "send" method
 		wss.clients.forEach((client) => client
-							.send(`Message from ${clientAddress} -> ${msg}`));
+							.send(`Message from ${clientCookie} -> ${msg}`));
 
 	})
 
