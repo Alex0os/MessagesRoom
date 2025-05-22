@@ -123,11 +123,44 @@ const httpsOptions: https.ServerOptions = {
 }
 
 const server = https.createServer(httpsOptions, app);
+server.on("upgrade", (req, socket, head) => {
+	const unauthorizedResponse = 
+		`HTTP/1.1 401 Unauthorized\r
+	WWW-Authenticate: Basic realm="Access to the site"\r
+	Content-Type: text/plain\r
+	Content-Length: 23\r
+	\r
+	Unauthorized access denied`;
+
+	let clientsCookie = req.headers.cookie;
+	if (!clientsCookie) {
+		socket.write(unauthorizedResponse);
+		socket.destroy();
+		return;
+	}
+
+	let sessionID = clientsCookie.match(/(?<=id=)[^;]+(?=;)/);
+	if (!sessionID || !sessionID[0]) {
+		socket.write(unauthorizedResponse);
+		socket.destroy();
+		return;
+	} else {
+		redisClient.get(sessionID[0])
+		.then(sessionExists => {
+			if (!sessionExists) {
+				socket.write(unauthorizedResponse);
+				socket.destroy();
+				return;
+			} else 
+				return;
+		})
+	}
+});
+
 const wss = new WebSocketServer({ server, path: "/ws"});
 
 // TODO: Remember to add authorization parsing to the handshake
 wss.on("connection", function(ws, req) {
-
 	ws.on("error", () => console.log("There was an error"));
 
 	ws.on("message", function(msg) {
