@@ -94,7 +94,7 @@ app.route("/login")
 
 		res.status(200)
 		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true, expires: sessionDates()})
-		.cookie("username", `${userName}`, {secure: true}) 
+		.cookie("username", `${userName}`, {secure: true, expires: sessionDates()}) 
 		.redirect("/")
 		// I don't know if this is a good way to do it, but its the only way
 		// I can think of
@@ -122,7 +122,7 @@ app.route("/signin")
 		await redisClient.set(sessionId, 1);
 		res.status(200)
 		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true, expires: sessionDates()})
-		.cookie("username", `${userName}`, {secure: true}) 
+		.cookie("username", `${userName}`, {secure: true, expires: sessionDates()}) 
 		.redirect("/")
 		
 	} catch (error) {
@@ -160,7 +160,9 @@ server.on("upgrade", async function(req, socket, head) {
 		return;
 	}
 
-	let sessionID = clientsCookie.match(/(?<=id=)[^;]+(?=;)/);
+	let sessionID = clientsCookie.match(/(?<=id=)\w+/);
+	console.log(clientsCookie, sessionID);
+
 	if (!sessionID || !sessionID[0]) {
 		socket.write(unauthorizedResponse);
 		socket.destroy();
