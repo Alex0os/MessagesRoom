@@ -14,6 +14,14 @@ const BUILD_DIR = process.cwd() + "/build/";
 const PUBLIC_DIR = process.cwd() + "/public/";
 const REACT_DIR = PUBLIC_DIR + "/app/";
 
+const SESSION_DURATION = 60 * 60 * 24 * 7 * 1000 // Seven days
+
+const sessionDates = () => {
+	const now = new Date();
+	now.setUTCDate(now.getUTCDate() + 7);
+	return now;
+}
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
@@ -56,8 +64,19 @@ function authorizeUser(req: Request, res: Response, next: NextFunction): void {
 }
 
 
-app.get("/", authorizeUser, (req, res) => {
-	res.sendFile(REACT_DIR + "index.html");
+app.get("/", authorizeUser, async function(req, res) {
+	let sessionId = await redisClient.keys(req.cookies.id);
+
+	let newId = randomBytes(32).toString("hex");
+	await redisClient.set(newId, 1, { EX: SESSION_DURATION / 1000 });
+
+	if (sessionId) {
+		await redisClient.del(sessionId[0]);
+	}
+
+	res
+	.cookie("id", `${newId}`, {httpOnly: true, secure: true, expires: sessionDates()})
+	.sendFile(REACT_DIR + "index.html");
 })
 
 app.use(express.static(REACT_DIR));
@@ -74,7 +93,7 @@ app.route("/login")
 		await redisClient.set(sessionId, 1);
 
 		res.status(200)
-		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true, expires: sessionDates()})
 		.cookie("username", `${userName}`, {secure: true}) 
 		.redirect("/")
 		// I don't know if this is a good way to do it, but its the only way
@@ -101,9 +120,8 @@ app.route("/signin")
 		let sessionId = randomBytes(32).toString("hex");
 
 		await redisClient.set(sessionId, 1);
-		res
-		.status(200)
-		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true})
+		res.status(200)
+		.cookie("id", `${sessionId}`, {httpOnly: true, secure: true, expires: sessionDates()})
 		.cookie("username", `${userName}`, {secure: true}) 
 		.redirect("/")
 		
